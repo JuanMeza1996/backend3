@@ -6,5 +6,5 @@ Proyecto de backend refactorizado desde una arquitectura monolítica a un patró
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone <URL_DE_TU_REPOSITORIO>
+   git clone https://github.com/JuanMeza1996/backend3
    cd shipnow-api
