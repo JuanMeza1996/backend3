@@ -1,10 +1,10 @@
 import { fakerES as faker } from '@faker-js/faker';
 import { ROLES } from '../constants/roles.constants.js'; 
-import { ORDER_STATUS, ORDER_PRIORITY } from '../constants/orders.constants.js';
+import { PRODUCT_STATUS } from '../constants/index.js'; 
 
 export const generateMockUsers = (qty = 5) => {
     const users = [];
-    const availableRoles = Object.values(ROLES);
+    const availableRoles = Object.values(ROLES || { CLIENT: 'cliente', DELIVERER: 'repartidor', ADMIN: 'admin' });
 
     for (let i = 0; i < qty; i++) {
         users.push({
@@ -16,19 +16,17 @@ export const generateMockUsers = (qty = 5) => {
     return users;
 };
 
-export const generateMockOrders = (qty = 5, userIds = []) => {
-    const orders = [];
-    const statuses = Object.values(ORDER_STATUS);
-    const priorities = Object.values(ORDER_PRIORITY);
+export const generateMockProducts = (qty = 5) => {
+    const products = [];
+    const statuses = Object.values(PRODUCT_STATUS || { AVAILABLE: 'disponible', OUT_OF_STOCK: 'sin_stock' });
 
     for (let i = 0; i < qty; i++) {
-        orders.push({
-            description: faker.commerce.productName(),
-            price: Number(faker.commerce.price({ min: 10, max: 500 })),
-            status: faker.helpers.arrayElement(statuses),
-            priority: faker.helpers.arrayElement(priorities),
-            user: userIds.length > 0 ? faker.helpers.arrayElement(userIds) : null
+        products.push({
+            name: faker.commerce.productName(),
+            price: Number(faker.commerce.price({ min: 100, max: 5000 })),
+            stock: faker.number.int({ min: 1, max: 100 }),
+            status: faker.helpers.arrayElement(statuses)
         });
     }
-    return orders;
+    return products;
 };
