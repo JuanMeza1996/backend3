@@ -1,11 +1,13 @@
 # ShipNow API - Refactorización a Arquitectura por Capas
 
 Proyecto de backend refactorizado desde una arquitectura monolítica a un patrón profesional de 3 capas (**Controller - Service - Repository**) con inyección y validación estricta de variables de entorno.
+API REST para la gestión de envíos, mocking, logging con rotación, documentación interactiva y subida de comprobantes.
 
 ## 🚀 Instrucciones para ejecutar localmente
 
 1. **Clonar el repositorio:**
    ```bash
+   npm install
    git clone https://github.com/JuanMeza1996/backend3
    cd shipnow-api
 

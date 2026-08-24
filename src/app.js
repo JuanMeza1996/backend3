@@ -1,42 +1,25 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import { config } from './config/env.config.js';
-import productRoutes from './routes/product.routes.js';
-import userRoutes from './routes/user.routes.js';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpecs } from './config/swagger.config.js';
 import mockRoutes from './routes/mock.routes.js';
-
-import { errorHandler } from './middlewares/errorHandler.js';
-import { AppError } from './errors/AppError.js';
-import { ErrorDictionary } from './constants/errorDictionary.js';
+import loggerRoutes from './routes/logger.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
+import { errorMiddleware } from './middlewares/error.middleware.js';
 
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Registro de rutas
+// Swagger UI
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
+// Rutas
 app.use('/api/mocks', mockRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/logger-test', loggerRoutes);
+app.use('/api/uploads', uploadRoutes);
 
-// 2. Captura de rutas no encontradas (404)
-app.use((req, res, next) => {
-    next(new AppError(ErrorDictionary.ROUTE_NOT_FOUND || { 
-        message: `Ruta no encontrada: ${req.originalUrl}`, 
-        statusCode: 404, 
-        code: 'NOT_FOUND' 
-    }));
-});
+// Global Error Handler
+app.use(errorMiddleware);
 
-// 3. MIDDLEWARE GLOBAL DE ERRORES
-app.use(errorHandler);
-
-mongoose.connect(config.mongoUri)
-    .then(() => {
-        console.log('✅ Conexión exitosa a MongoDB');
-        app.listen(config.port, () => {
-            console.log(`🚀 Servidor ShipNow corriendo en puerto ${config.port}`);
-        });
-    })
-    .catch(err => {
-        console.error('❌ Error de conexión a la base de datos:', err.message);
-    });
+export default app;

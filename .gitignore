@@ -1,8 +1,8 @@
 # Dependencias
 node_modules/
-
-# Variables de entorno con datos sensibles
 .env
+logs/
+uploads/
 .env.local
 
 # Logs
