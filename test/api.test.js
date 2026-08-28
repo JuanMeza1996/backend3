@@ -121,5 +121,27 @@ describe('Suite de Pruebas Funcionales - ShipNow API', () => {
       expect(response.status).to.equal(404);
     });
   });
+  // ==========================================
+  // 5. MÓDULO DE UPLOADS (/api/uploads)
+  // ==========================================
+  describe('Módulo Uploads: /api/uploads/document', () => {
+    it('POST /api/uploads/document - Debe subir un archivo PDF válido y guardar metadatos (201)', async () => {
+      const response = await request(app)
+        .post('/api/uploads/document')
+        .attach('document', Buffer.from('%PDF-1.4 test file content'), 'test_document.pdf');
+
+      expect(response.status).to.equal(201);
+      expect(response.body).to.have.property('status', 'success');
+      expect(response.body.payload).to.have.property('originalname', 'test_document.pdf');
+    });
+
+    it('POST /api/uploads/document [ERROR] - Debe fallar con 400 si no se envía archivo', async () => {
+      const response = await request(app)
+        .post('/api/uploads/document');
+
+      expect(response.status).to.equal(400);
+      expect(response.body).to.have.property('status', 'error');
+    });
+  });
 
 });
