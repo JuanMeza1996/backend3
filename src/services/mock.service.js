@@ -1,52 +1,82 @@
-import { MockRepository } from '../repositories/mock.repository.js';
-import { generateMockUsers, generateMockProducts } from '../utils/mock.generator.js';
-import { AppError } from '../errors/AppError.js';
-import { ErrorDictionary } from '../constants/errorDictionary.js';
+import { faker } from '@faker-js/faker';
+import { USER_ROLES, ORDER_STATUS, DELIVERY_STATUS } from '../constants/index.js';
+import { UserModel } from '../models/user.model.js';
+import { DriverModel } from '../models/driver.model.js';
+import { OrderModel } from '../models/order.model.js';
+import { DeliveryModel } from '../models/delivery.model.js';
 
-export class MockService {
-    constructor() {
-        this.mockRepository = new MockRepository();
-    }
+export const generateMockUsers = (qty = 5) => {
+  const users = [];
+  const roles = Object.values(USER_ROLES);
+  for (let i = 0; i < qty; i++) {
+    users.push({
+      name: faker.person.fullName(),
+      email: faker.internet.email().toLowerCase(),
+      role: faker.helpers.arrayElement(roles)
+    });
+  }
+  return users;
+};
 
-    _validateQuantity(qty) {
-        const parsedQty = Number(qty);
-        if (isNaN(parsedQty) || !Number.isInteger(parsedQty) || parsedQty <= 0) {
-            throw new AppError(ErrorDictionary.MOCK_INVALID_COUNT);
-        }
-        return parsedQty;
-    }
+export const generateMockDrivers = (qty = 5) => {
+  const drivers = [];
+  for (let i = 0; i < qty; i++) {
+    drivers.push({
+      name: faker.person.fullName(),
+      email: faker.internet.email().toLowerCase(),
+      phone: faker.phone.number(),
+      vehicle: faker.helpers.arrayElement(['Moto', 'Auto', 'Bicicleta']),
+      isAvailable: faker.datatype.boolean()
+    });
+  }
+  return drivers;
+};
 
-    getUsers(qty = 5) {
-        const validQty = this._validateQuantity(qty);
-        return generateMockUsers(validQty);
-    }
+export const generateMockOrders = (qty = 5) => {
+  const orders = [];
+  const statuses = Object.values(ORDER_STATUS);
+  for (let i = 0; i < qty; i++) {
+    orders.push({
+      customerName: faker.person.fullName(),
+      deliveryAddress: faker.location.streetAddress(),
+      totalAmount: parseFloat(faker.commerce.price({ min: 500, max: 15000 })),
+      status: faker.helpers.arrayElement(statuses)
+    });
+  }
+  return orders;
+};
 
-    getProducts(qty = 5) {
-        const validQty = this._validateQuantity(qty);
-        return generateMockProducts(validQty);
-    }
+export const seedDatabaseService = async (usersQty = 5, ordersQty = 5, driversQty = 3) => {
+  // 1. Insertar Usuarios
+  const mockUsers = generateMockUsers(usersQty);
+  const insertedUsers = await UserModel.insertMany(mockUsers);
 
-    async seedData(qtyUsers = 5, qtyProducts = 5) {
-        const validUsersQty = this._validateQuantity(qtyUsers);
-        const validProductsQty = this._validateQuantity(qtyProducts);
+  // 2. Insertar Repartidores
+  const mockDrivers = generateMockDrivers(driversQty);
+  const insertedDrivers = await DriverModel.insertMany(mockDrivers);
 
-        try {
-            // 1. Inserción de usuarios
-            const mockUsers = generateMockUsers(validUsersQty);
-            const insertedUsers = await this.mockRepository.insertUsers(mockUsers);
+  // 3. Insertar Pedidos
+  const mockOrders = generateMockOrders(ordersQty);
+  const insertedOrders = await OrderModel.insertMany(mockOrders);
 
-            // 2. Inserción de productos
-            const mockProducts = generateMockProducts(validProductsQty);
-            const insertedProducts = await this.mockRepository.insertProducts(mockProducts);
+  // 4. Crear Entregas vinculando Pedidos y Repartidores
+  const mockDeliveries = [];
+  const deliveryStatuses = Object.values(DELIVERY_STATUS);
 
-            return {
-                usersInserted: insertedUsers.length,
-                productsInserted: insertedProducts.length
-            };
-        } catch (error) {
-            if (error instanceof AppError) throw error;
+  for (let i = 0; i < Math.min(insertedOrders.length, insertedDrivers.length); i++) {
+    mockDeliveries.push({
+      orderId: insertedOrders[i]._id,
+      driverId: insertedDrivers[i]._id,
+      status: faker.helpers.arrayElement(deliveryStatuses)
+    });
+  }
 
-            throw new AppError(ErrorDictionary.MOCK_DB_INSERTION_FAILED);
-        }
-    }
-}
+  const insertedDeliveries = await DeliveryModel.insertMany(mockDeliveries);
+
+  return {
+    users: insertedUsers.length,
+    drivers: insertedDrivers.length,
+    orders: insertedOrders.length,
+    deliveries: insertedDeliveries.length
+  };
+};
