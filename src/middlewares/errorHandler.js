@@ -10,7 +10,7 @@ export const errorHandler = (err, req, res, next) => {
     message: err.message || ErrorDictionary.INTERNAL_SERVER_ERROR.message
   };
 
-  // En entorno de desarrollo (NODE_ENV=development) podés incluir err.stack si lo requerís
+  // En entorno de desarrollo (NODE_ENV=development) 
   if (process.env.NODE_ENV === 'development') {
     response.stack = err.stack;
   }
