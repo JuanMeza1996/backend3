@@ -1,32 +1,36 @@
 export const ErrorDictionary = {
-  // Errores de Negocio / Dominio
+  // Mocks
+  INVALID_QUANTITY: {
+    statusCode: 400,
+    errorCode: 'MOCK_001',
+    message: 'La cantidad enviada no es un número entero positivo válido.'
+  },
+  // Users
+  EMAIL_ALREADY_REGISTERED: {
+    statusCode: 409,
+    errorCode: 'USER_001',
+    message: 'El email ingresado ya se encuentra registrado.'
+  },
   USER_NOT_FOUND: {
-    code: 'USER_001',
-    message: 'El usuario especificado no existe.',
-    statusCode: 404
+    statusCode: 404,
+    errorCode: 'USER_002',
+    message: 'El usuario solicitado no existe.'
   },
-  INVALID_ORDER_STATUS: {
-    code: 'ORDER_001',
-    message: 'El estado del pedido proporcionado es inválido.',
-    statusCode: 400
+  // Products
+  INVALID_PRODUCT_DATA: {
+    statusCode: 400,
+    errorCode: 'PRODUCT_001',
+    message: 'Los datos del producto son inválidos o están incompletos.'
   },
-  
-  // Módulo de Mocks
-  MOCK_INVALID_COUNT: {
-    code: 'MOCK_001',
-    message: 'La cantidad de mocks debe ser un número entero mayor a cero.',
-    statusCode: 400
+  PRODUCT_NOT_FOUND: {
+    statusCode: 404,
+    errorCode: 'PRODUCT_002',
+    message: 'El producto solicitado no existe.'
   },
-  MOCK_DB_INSERTION_FAILED: {
-    code: 'MOCK_002',
-    message: 'Ocurrió un error al insertar los datos de prueba en la base de datos.',
-    statusCode: 500
-  },
-
-  // Errores Generales
+  // Sistema
   INTERNAL_SERVER_ERROR: {
-    code: 'SYS_001',
-    message: 'Ocurrió un error interno e inesperado en el servidor.',
-    statusCode: 500
+    statusCode: 500,
+    errorCode: 'SYS_001',
+    message: 'Error interno del servidor.'
   }
 };
