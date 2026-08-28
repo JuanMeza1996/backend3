@@ -77,3 +77,14 @@ Las pruebas integradas evalúan los flujos exitosos (*Happy Path*) y el control 
 ```bash
 npm test
 
+## 📁 Carga y Gestión de Archivos (Multer & Mongoose)
+
+El sistema cuenta con un módulo desacoplado en 3 capas (`UploadController`, `UploadService`, `DocumentModel`) para la recepción, filtrado y persistencia de comprobantes.
+
+- **Endpoint:** `POST /api/uploads/document` (`multipart/form-data`)
+- **Campo esperado:** `document`
+- **Tipos permitidos:** `.jpg`, `.png`, `.pdf` (Filtro con `AppError` para formatos no válidos).
+- **Límite de tamaño:** 5 MB.
+- **Persistencia de Archivos:** Guardados localmente en `/uploads/documents/` (directorio en `.gitignore`).
+- **Persistencia de Metadatos:** Cada archivo exitoso guarda su registro en MongoDB mediante Mongoose (`filename`, `originalname`, `mimetype`, `size`, `path`).
+
