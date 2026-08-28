@@ -39,3 +39,19 @@ La API permite simular y poblar datos en memoria o persistirlos en MongoDB de ma
     "ordersQty": 10,
     "driversQty": 5
   }
+
+## ⚠️ Ejemplos de Respuestas de Error (Middleware Global)
+
+La API procesa todas las excepciones y las estandariza utilizando el diccionario de errores.
+
+### 1. Cantidad Inválida en Mocks (`MOCK_001`)
+- **Petición:** `GET /api/mocks/users?qty=0` o `GET /api/mocks/users?qty=-5`
+- **Respuesta (400 Bad Request):**
+```json
+{
+  "status": "error",
+  "statusCode": 400,
+  "errorCode": "MOCK_001",
+  "message": "La cantidad enviada no es un número entero positivo válido."
+}
+
