@@ -1,4 +1,6 @@
 import { UserRepository } from '../repositories/user.repository.js';
+import { AppError } from '../errors/AppError.js';
+import { ErrorDictionary } from '../constants/errorDictionary.js';
 
 const userRepository = new UserRepository();
 
@@ -10,7 +12,7 @@ export class UserService {
     async registerUser(userData) {
         const existingUser = await userRepository.findByEmail(userData.email);
         if (existingUser) {
-            throw new Error('El email ya está registrado');
+            throw new AppError(ErrorDictionary.EMAIL_ALREADY_REGISTERED);
         }
         return await userRepository.create(userData);
     }
