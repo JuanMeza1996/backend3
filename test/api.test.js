@@ -104,6 +104,14 @@ describe('Suite de Pruebas Funcionales - ShipNow API', () => {
       expect(response.status).to.equal(200);
       expect(response.body.payload).to.have.lengthOf(3);
     });
+    it('POST /api/uploads/document [ERROR] - Debe fallar con 400 si el formato no es válido (ej: .txt)', async () => {
+      const response = await request(app)
+      .post('/api/uploads/document')
+      .attach('document', Buffer.from('texto de prueba'), 'archivo_invalido.txt');
+
+      expect(response.status).to.equal(400);
+      expect(response.body).to.have.property('status', 'error');
+});
 
     it('GET /api/logger-test - Debe emitir logs en todos los niveles y responder 200 OK', async () => {
       const response = await request(app).get('/api/logger-test');
