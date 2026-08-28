@@ -1,5 +1,7 @@
 import { ProductRepository } from '../repositories/product.repository.js';
 import { PRODUCT_STATUS } from '../constants/index.js';
+import { AppError } from '../errors/AppError.js';
+import { ErrorDictionary } from '../constants/errorDictionary.js';
 
 const productRepository = new ProductRepository();
 
@@ -15,7 +17,7 @@ export class ProductService {
 
     async createProduct(productData) {
         if (!productData.name || productData.price <= 0) {
-            throw new Error('Datos del producto inválidos');
+            throw new AppError(ErrorDictionary.INVALID_PRODUCT_DATA);
         }
         
         // Asignación de estado inicial según regla de negocio
