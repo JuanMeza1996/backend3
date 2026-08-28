@@ -2,17 +2,17 @@ import { MockService } from '../services/mock.service.js';
 
 const mockService = new MockService();
 
-export const getMockUsers = (req, res) => {
+export const getMockUsers = (req, res, next) => {
     try {
         const { qty } = req.query;
         const users = mockService.getUsers(qty);
         res.status(200).json({ status: 'success', payload: users });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        next(error);
     }
 };
 
-export const seedDatabase = async (req, res) => {
+export const seedDatabase = async (req, res, next) => {
     try {
         const { qtyUsers = 10, qtyOrders = 10 } = req.query;
         const result = await mockService.seedData(qtyUsers, qtyOrders);
@@ -22,6 +22,6 @@ export const seedDatabase = async (req, res) => {
             payload: result
         });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        next(error);
     }
 };
