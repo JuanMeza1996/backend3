@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "main": "src/app.js",
-  "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "mocha --timeout 10000 --exit test/**/*.test.js"
-  },
+ "scripts": {
+  "start": "node src/server.js",
+  "dev": "nodemon src/server.js",
+  "test": "npx mocha --timeout 10000 --exit test/**/*.test.js"
+}
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
     "dotenv": "^16.4.5",
