@@ -11,18 +11,31 @@ API REST para la gestión de envíos, mocking, logging con rotación, documentac
    git clone https://github.com/JuanMeza1996/backend3
    cd shipnow-api
 
-## 🛡️ Sistema Unificado de Gestión de Errores (Módulo 3)
+## 🧪 Documentación de Endpoints Mock (`/api/mocks`)
 
-La API **ShipNow** implementa una arquitectura centralizada de manejo de errores por capas. Toda excepción (de negocio o no controlada) es capturada y procesada por un **Middleware Global**, garantizando respuestas JSON con formato uniforme.
+La API permite simular y poblar datos en memoria o persistirlos en MongoDB de manera controlada.
 
-### 📄 Estructura de Respuesta de Error
+### 1. Obtener Usuarios Simulados
+- **Ruta:** `GET /api/mocks/users?qty=5`
+- **Descripción:** Devuelve una lista de usuarios ficticios sin tocar la base de datos.
+- **Parámetros Query:** `qty` (opcional, por defecto 5).
 
-Todos los errores devuelven un objeto JSON con la siguiente estructura:
+### 2. Obtener Repartidores Simulados
+- **Ruta:** `GET /api/mocks/drivers?qty=5`
+- **Descripción:** Devuelve una lista de repartidores con vehículo y disponibilidad simulados.
+- **Parámetros Query:** `qty` (opcional, por defecto 5).
 
-```json
-{
-  "status": "fail | error",
-  "statusCode": 400,
-  "errorCode": "MOCK_001",
-  "message": "Mensaje descriptivo orientado al cliente."
-}
+### 3. Obtener Pedidos Simulados
+- **Ruta:** `GET /api/mocks/orders?qty=5`
+- **Descripción:** Genera pedidos simulados con direcciones y montos aleatorios.
+- **Parámetros Query:** `qty` (opcional, por defecto 5).
+
+### 4. Poblar la Base de Datos (Seeding)
+- **Ruta:** `POST /api/mocks/seed`
+- **Body (JSON):**
+  ```json
+  {
+    "usersQty": 10,
+    "ordersQty": 10,
+    "driversQty": 5
+  }
