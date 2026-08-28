@@ -1,36 +1,40 @@
 import { Router } from 'express';
-import { getMockUsers, seedDatabase } from '../controllers/mock.controller.js';
+import { 
+  generateMockUsers, 
+  generateMockDrivers, 
+  generateMockOrders, 
+  seedDatabaseService 
+} from '../services/mock.service.js';
 
 const router = Router();
 
-/**
- * @openapi
- * /api/mocks/users:
- *   get:
- *     summary: Obtener usuarios simulados
- *     tags: [Mocks]
- *     parameters:
- *       - in: query
- *         name: qty
- *         schema:
- *           type: integer
- *         description: Cantidad de usuarios
- *     responses:
- *       200:
- *         description: Éxito
- */
-router.get('/users', getMockUsers);
+// Endpoint de Usuarios
+router.get('/users', (req, res) => {
+  const qty = parseInt(req.query.qty) || 5;
+  res.json({ status: 'success', payload: generateMockUsers(qty) });
+});
 
-/**
- * @openapi
- * /api/mocks/seed:
- *   post:
- *     summary: Carga masiva de datos de prueba en MongoDB
- *     tags: [Mocks]
- *     responses:
- *       201:
- *         description: Datos insertados
- */
-router.post('/seed', seedDatabase);
+// Endpoint de Repartidores
+router.get('/drivers', (req, res) => {
+  const qty = parseInt(req.query.qty) || 5;
+  res.json({ status: 'success', payload: generateMockDrivers(qty) });
+});
+
+// Endpoint de Pedidos
+router.get('/orders', (req, res) => {
+  const qty = parseInt(req.query.qty) || 5;
+  res.json({ status: 'success', payload: generateMockOrders(qty) });
+});
+
+// Seeding en Base de Datos
+router.post('/seed', async (req, res, next) => {
+  try {
+    const { usersQty, ordersQty, driversQty } = req.body;
+    const result = await seedDatabaseService(usersQty, ordersQty, driversQty);
+    res.status(201).json({ status: 'success', message: 'Seeding completado con éxito', payload: result });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
