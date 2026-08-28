@@ -54,4 +54,26 @@ La API procesa todas las excepciones y las estandariza utilizando el diccionario
   "errorCode": "MOCK_001",
   "message": "La cantidad enviada no es un número entero positivo válido."
 }
+## 🧪 Testing Funcional Automatizado
+
+Las pruebas integradas evalúan los flujos exitosos (*Happy Path*) y el control de excepciones (*Error Path*) utilizando **Mocha**, **Chai** y **Supertest**.
+
+### Módulos Coberturados por los Tests:
+1. **Usuarios (`/api/users`):**
+   - Obtención de lista completa (`200 OK`).
+   - Creación de nuevo usuario (`201 Created`).
+   - Control de email duplicado (`409 Conflict` - `USER_001`).
+2. **Productos (`/api/products`):**
+   - Obtención de productos (`200 OK`).
+   - Creación de producto válido (`201 Created`).
+   - Validación de datos o precios inválidos (`400 Bad Request` - `PRODUCT_001`).
+3. **Mocks y Logger:**
+   - Generación en memoria con query param `qty` (`200 OK`).
+   - Emisión de logs en todos los niveles (`200 OK`).
+4. **Manejo Global de Errores:**
+   - Respuesta ante rutas no encontradas (`404 Not Found`).
+
+### Ejecución de Pruebas:
+```bash
+npm test
 
