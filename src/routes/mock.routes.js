@@ -1,18 +1,12 @@
 import { Router } from 'express';
-import { 
-  generateMockUsers, 
-  generateMockDrivers, 
-  generateMockOrders, 
-  seedDatabaseService 
-} from '../services/mock.service.js';
+import { MockController } from '../controllers/mock.controller.js';
+import { generateMockDrivers, generateMockOrders, seedDatabaseService } from '../services/mock.service.js';
 
 const router = Router();
+const mockController = new MockController();
 
-// Endpoint de Usuarios
-router.get('/users', (req, res) => {
-  const qty = parseInt(req.query.qty) || 5;
-  res.json({ status: 'success', payload: generateMockUsers(qty) });
-});
+// Endpoint de Usuarios (usando Controller para validar qty y lanzar MOCK_001)
+router.get('/users', (req, res, next) => mockController.getMockUsers(req, res, next));
 
 // Endpoint de Repartidores
 router.get('/drivers', (req, res) => {
