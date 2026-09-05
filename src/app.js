@@ -1,6 +1,7 @@
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.config.js';
+import { config } from './config/env.config.js';
 
 import userRoutes from './routes/user.routes.js';
 import productRoutes from './routes/product.routes.js';
@@ -16,7 +17,17 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Swagger UI
+// Endpoint de Health Check (Diagnóstico y Monitoreo para Docker/Prod)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    environment: config.nodeEnv,
+    uptime: `${Math.floor(process.uptime())}s`,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Swagger UI (Restringido opcionalmente si se requiere en Producción)
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Rutas de la API
@@ -24,9 +35,13 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/deliveries', deliveryRoutes);
-app.use('/api/mocks', mockRoutes);
-app.use('/api/logger-test', loggerRoutes);
 app.use('/api/uploads', uploadRoutes);
+
+// Criterio de entorno: Mocks y Logger Test accesibles en desarrollo
+if (config.nodeEnv !== 'production') {
+  app.use('/api/mocks', mockRoutes);
+  app.use('/api/logger-test', loggerRoutes);
+}
 
 // Middleware Global de Errores
 app.use(errorHandler);

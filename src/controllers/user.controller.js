@@ -5,8 +5,11 @@ const userService = new UserService();
 export class UserController {
   async getUsers(req, res, next) {
     try {
-      const users = await userService.getUsers();
-      res.status(200).json({ status: 'success', payload: users });
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      
+      const result = await userService.getUsers({ page, limit });
+      res.status(200).json({ status: 'success', payload: result });
     } catch (error) {
       next(error);
     }
