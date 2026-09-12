@@ -40,14 +40,13 @@ Copiar `.env.example` como `.env` y completar:
 
 | Variable | Descripción |
 |---|---|
-| `PORT` | Puerto HTTP, por defecto 8080 |
-| `MONGO_URI` | Base MongoDB de desarrollo |
-| `MONGO_URI_TEST` | **Base de datos independiente para tests** |
+| `PORT` | Puerto HTTP de la API. Por defecto `8080` |
+| `MONGO_URI` | URI de MongoDB para desarrollo/producción |
+| `MONGO_URI_TEST` | Base de datos MongoDB independiente para tests |
 | `NODE_ENV` | `development`, `test` o `production` |
-| `LOG_LEVEL` | Nivel Winston (`info`, `debug`, etc.) |
-| `UPLOAD_MAX_MB` | Límite de archivos; recomendado 5 |
-| `MAX_PAGE_SIZE` | Máximo de elementos por página |
-| `ENABLE_INTERNAL_ENDPOINTS` | Habilita mocks/logger internos fuera de producción |
+| `LOG_LEVEL` | Nivel de Winston (`info`, `debug`, etc.) |
+| `MAX_FILE_SIZE_MB` | Tamaño máximo permitido para uploads. Por defecto `5` |
+| `UPLOAD_DIR` | Directorio donde se guardan archivos subidos |
 
 **Nunca subir `.env` real al repositorio.**
 
@@ -113,12 +112,10 @@ Incluye schemas de **User, Order/Envío, Delivery, Product, Error y Success**, p
 | GET/POST | `/api/orders` | Listar / crear envíos |
 | GET | `/api/orders/:id` | Obtener envío |
 | PUT | `/api/orders/:id` | Actualizar envío |
-| GET | `/api/orders/:idOrCode/tracking` | Tracking por ID o código |
+| GET |`/api/orders/tracking/:trackingCode` | Tracking por ID o código |
 | GET/POST | `/api/deliveries` | Listar / crear entregas |
 | GET/PUT | `/api/deliveries/:id` | Consultar / actualizar entrega |
-| POST | `/api/uploads/users/:id` | Documento asociado a usuario |
-| POST | `/api/uploads/orders/:id` | Comprobante asociado a envío |
-| POST | `/api/uploads/deliveries/:id` | Comprobante asociado a entrega |
+| POST | `/api/uploads/document` | Subir documento/comprobante asociado a usuario, envío o entrega |
 | GET | `/api/mocks/users?qty=5` | Usuarios simulados |
 | GET | `/api/mocks/drivers?qty=5` | Repartidores simulados |
 | GET | `/api/mocks/orders?qty=5` | Envíos simulados |
@@ -176,6 +173,24 @@ Multer acepta:
 Los archivos se guardan en `uploads/documents/` y los metadatos se persisten en MongoDB con su propietario (`User`, `Order` o `Delivery`).
 
 La carpeta del repositorio queda saneada mediante `.gitkeep`; los archivos reales se generan únicamente en runtime.
+
+El request utiliza `multipart/form-data`.
+
+El campo del archivo debe llamarse:
+
+`document`
+
+Además, se debe enviar exactamente uno de estos campos:
+
+- `userId`
+- `orderId`
+- `deliveryId`
+
+Ejemplo conceptual:
+
+```text
+document: comprobante.pdf
+orderId: 64f...
 
 ## Docker
 

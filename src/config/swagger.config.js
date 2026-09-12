@@ -19,14 +19,38 @@ const swaggerOptions = {
     ],
 
     tags: [
-      { name: 'Health' },
-      { name: 'Users' },
-      { name: 'Products' },
-      { name: 'Shipments' },
-      { name: 'Deliveries' },
-      { name: 'Mocks' },
-      { name: 'Uploads' },
-      { name: 'Logger' }
+      {
+        name: 'Health',
+        description: 'Estado general de la API y conexión con MongoDB'
+      },
+      {
+        name: 'Users',
+        description: 'Gestión de usuarios'
+      },
+      {
+        name: 'Products',
+        description: 'Gestión de productos'
+      },
+      {
+        name: 'Orders',
+        description: 'Gestión de envíos y tracking'
+      },
+      {
+        name: 'Deliveries',
+        description: 'Gestión de entregas'
+      },
+      {
+        name: 'Mocks',
+        description: 'Generación y persistencia de datos simulados'
+      },
+      {
+        name: 'Uploads',
+        description: 'Carga de documentos y comprobantes'
+      },
+      {
+        name: 'Logger',
+        description: 'Prueba del sistema de logging'
+      }
     ],
 
     components: {
@@ -40,8 +64,9 @@ const swaggerOptions = {
           ],
 
           properties: {
-            id: {
-              type: 'string'
+            _id: {
+              type: 'string',
+              example: '64f10c57d2ad98a0b1234567'
             },
 
             name: {
@@ -63,6 +88,18 @@ const swaggerOptions = {
                 'repartidor'
               ],
               example: 'user'
+            },
+
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
+            },
+
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
             }
           }
         },
@@ -77,22 +114,26 @@ const swaggerOptions = {
           ],
 
           properties: {
-            id: {
-              type: 'string'
+            _id: {
+              type: 'string',
+              example: '64f10c57d2ad98a0b1234568'
             },
 
             name: {
-              type: 'string'
+              type: 'string',
+              example: 'Caja mediana'
             },
 
             price: {
               type: 'number',
-              minimum: 0
+              minimum: 0,
+              example: 1500
             },
 
             stock: {
               type: 'integer',
-              minimum: 0
+              minimum: 0,
+              example: 10
             },
 
             status: {
@@ -100,7 +141,20 @@ const swaggerOptions = {
               enum: [
                 'AVAILABLE',
                 'OUT_OF_STOCK'
-              ]
+              ],
+              example: 'AVAILABLE'
+            },
+
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
+            },
+
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
             }
           }
         },
@@ -115,8 +169,9 @@ const swaggerOptions = {
           ],
 
           properties: {
-            id: {
-              type: 'string'
+            _id: {
+              type: 'string',
+              example: '64f10c57d2ad98a0b1234569'
             },
 
             trackingCode: {
@@ -125,20 +180,25 @@ const swaggerOptions = {
             },
 
             userId: {
-              type: 'string'
+              type: 'string',
+              nullable: true,
+              example: '64f10c57d2ad98a0b1234567'
             },
 
             customerName: {
-              type: 'string'
+              type: 'string',
+              example: 'Carlos López'
             },
 
             deliveryAddress: {
-              type: 'string'
+              type: 'string',
+              example: 'Av. Libertador 1234'
             },
 
             totalAmount: {
               type: 'number',
-              minimum: 0
+              minimum: 0,
+              example: 2500
             },
 
             priority: {
@@ -147,7 +207,8 @@ const swaggerOptions = {
                 'baja',
                 'media',
                 'alta'
-              ]
+              ],
+              example: 'alta'
             },
 
             status: {
@@ -157,7 +218,20 @@ const swaggerOptions = {
                 'en_camino',
                 'entregado',
                 'cancelado'
-              ]
+              ],
+              example: 'pendiente'
+            },
+
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
+            },
+
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
             }
           }
         },
@@ -171,16 +245,19 @@ const swaggerOptions = {
           ],
 
           properties: {
-            id: {
-              type: 'string'
+            _id: {
+              type: 'string',
+              example: '64f10c57d2ad98a0b1234570'
             },
 
             orderId: {
-              type: 'string'
+              type: 'string',
+              example: '64f10c57d2ad98a0b1234569'
             },
 
             driverId: {
-              type: 'string'
+              type: 'string',
+              example: '64f10c57d2ad98a0b1234571'
             },
 
             status: {
@@ -189,17 +266,33 @@ const swaggerOptions = {
                 'asignado',
                 'en_curso',
                 'completado'
-              ]
+              ],
+              example: 'asignado'
             },
 
             assignedAt: {
               type: 'string',
-              format: 'date-time'
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
             },
 
             deliveredAt: {
               type: 'string',
-              format: 'date-time'
+              format: 'date-time',
+              nullable: true,
+              example: '2026-09-12T22:30:00.000Z'
+            },
+
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
+            },
+
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2026-09-12T20:00:00.000Z'
             }
           }
         },
@@ -235,11 +328,23 @@ const swaggerOptions = {
               example:
                 'El estado indicado para el envío no es válido.'
             }
+          },
+
+          example: {
+            status: 'fail',
+            statusCode: 400,
+            errorCode: 'ORDER_003',
+            message:
+              'El estado indicado para el envío no es válido.'
           }
         },
 
         Success: {
           type: 'object',
+
+          required: [
+            'status'
+          ],
 
           properties: {
             status: {
@@ -248,7 +353,9 @@ const swaggerOptions = {
             },
 
             payload: {
-              nullable: true
+              nullable: true,
+              description:
+                'Contenido de la respuesta. Su estructura depende del endpoint.'
             }
           }
         }
