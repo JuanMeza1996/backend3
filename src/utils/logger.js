@@ -1,5 +1,4 @@
 import winston from 'winston';
-import 'winston-daily-rotate-file';
 
 import {
   config,
@@ -9,70 +8,55 @@ import {
 const {
   combine,
   timestamp,
+  errors,
   json,
   colorize,
-  printf
+  simple
 } = winston.format;
 
-const fileFormat =
-  combine(
-    timestamp(),
-    json()
-  );
-
-const consoleFormat =
-  combine(
-    colorize(),
-    timestamp({
-      format:
-        'YYYY-MM-DD HH:mm:ss'
-    }),
-
-    printf(
-      ({
-        timestamp: time,
-        level,
-        message
-      }) =>
-        `${time} [${level.toUpperCase()}]: ${message}`
-    )
-  );
+const fileFormat = combine(
+  timestamp(),
+  errors({
+    stack: true
+  }),
+  json()
+);
 
 const transports = [
-  new winston.transports.DailyRotateFile({
-    filename:
-      'logs/error-%DATE%.log',
-
-    datePattern:
-      'YYYY-MM-DD',
-
+  /*
+   * Solo errores.
+   */
+  new winston.transports.File({
+    filename: 'logs/error.log',
     level: 'error',
-
-    maxFiles: '14d',
-
     format: fileFormat
   }),
 
-  new winston.transports.DailyRotateFile({
-    filename:
-      'logs/combined-%DATE%.log',
-
-    datePattern:
-      'YYYY-MM-DD',
-
-    level: config.logLevel,
-
-    maxFiles: '14d',
-
+  /*
+   * Registro general.
+   * Incluye error, warn, info y los niveles
+   * permitidos por LOG_LEVEL.
+   */
+  new winston.transports.File({
+    filename: 'logs/combined.log',
     format: fileFormat
   })
 ];
 
+/*
+ * La consola se utiliza únicamente fuera
+ * del entorno de producción.
+ */
 if (!isProduction) {
   transports.push(
     new winston.transports.Console({
-      level: config.logLevel,
-      format: consoleFormat
+      format: combine(
+        colorize(),
+        timestamp({
+          format: 'HH:mm:ss'
+        }),
+        simple()
+      )
     })
   );
 }
@@ -81,5 +65,6 @@ export const logger =
   winston.createLogger({
     level: config.logLevel,
     format: fileFormat,
-    transports
+    transports,
+    exitOnError: false
   });
