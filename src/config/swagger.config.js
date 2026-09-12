@@ -3,70 +3,263 @@ import swaggerJSDoc from 'swagger-jsdoc';
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
+
     info: {
-      title: 'ShipNow API - Documentación',
-      version: '1.0.0',
-      description: 'API REST para gestión de envíos, usuarios, pedidos, entregas y mocks.'
+      title: 'ShipNow API',
+      version: '2.0.0',
+      description:
+        'API backend profesional para gestión de usuarios, productos, envíos, tracking, entregas, mocks y comprobantes.'
     },
+
     servers: [
       {
         url: 'http://localhost:8080',
-        description: 'Servidor Local'
+        description: 'Servidor local'
       }
     ],
+
+    tags: [
+      { name: 'Health' },
+      { name: 'Users' },
+      { name: 'Products' },
+      { name: 'Shipments' },
+      { name: 'Deliveries' },
+      { name: 'Mocks' },
+      { name: 'Uploads' },
+      { name: 'Logger' }
+    ],
+
     components: {
       schemas: {
         User: {
           type: 'object',
+
+          required: [
+            'name',
+            'email'
+          ],
+
           properties: {
-            id: { type: 'string', example: '66bc1234567890abcdef1234' },
-            name: { type: 'string', example: 'Juan Meza' },
-            email: { type: 'string', example: 'juan@example.com' },
-            role: { type: 'string', example: 'user', enum: ['admin', 'user', 'repartidor'] }
+            id: {
+              type: 'string'
+            },
+
+            name: {
+              type: 'string',
+              example: 'Juan Meza'
+            },
+
+            email: {
+              type: 'string',
+              format: 'email',
+              example: 'juan@example.com'
+            },
+
+            role: {
+              type: 'string',
+              enum: [
+                'admin',
+                'user',
+                'repartidor'
+              ],
+              example: 'user'
+            }
           }
         },
+
         Product: {
           type: 'object',
+
+          required: [
+            'name',
+            'price',
+            'stock'
+          ],
+
           properties: {
-            id: { type: 'string', example: '66bc1234567890abcdef5678' },
-            name: { type: 'string', example: 'Caja de Envío M' },
-            price: { type: 'number', example: 1250.50 },
-            stock: { type: 'integer', example: 50 },
-            status: { type: 'string', example: 'AVAILABLE' }
+            id: {
+              type: 'string'
+            },
+
+            name: {
+              type: 'string'
+            },
+
+            price: {
+              type: 'number',
+              minimum: 0
+            },
+
+            stock: {
+              type: 'integer',
+              minimum: 0
+            },
+
+            status: {
+              type: 'string',
+              enum: [
+                'AVAILABLE',
+                'OUT_OF_STOCK'
+              ]
+            }
           }
         },
-        Order: {
+
+        Shipment: {
           type: 'object',
+
+          required: [
+            'customerName',
+            'deliveryAddress',
+            'totalAmount'
+          ],
+
           properties: {
-            id: { type: 'string', example: '66bc1234567890abcdef9012' },
-            customerName: { type: 'string', example: 'Carlos Pérez' },
-            deliveryAddress: { type: 'string', example: 'Av. Libertador 1234' },
-            totalAmount: { type: 'number', example: 4500.00 },
-            status: { type: 'string', example: 'pendiente' }
+            id: {
+              type: 'string'
+            },
+
+            trackingCode: {
+              type: 'string',
+              example: 'SHP-A1B2C3D4'
+            },
+
+            userId: {
+              type: 'string'
+            },
+
+            customerName: {
+              type: 'string'
+            },
+
+            deliveryAddress: {
+              type: 'string'
+            },
+
+            totalAmount: {
+              type: 'number',
+              minimum: 0
+            },
+
+            priority: {
+              type: 'string',
+              enum: [
+                'baja',
+                'media',
+                'alta'
+              ]
+            },
+
+            status: {
+              type: 'string',
+              enum: [
+                'pendiente',
+                'en_camino',
+                'entregado',
+                'cancelado'
+              ]
+            }
           }
         },
+
         Delivery: {
           type: 'object',
+
+          required: [
+            'orderId',
+            'driverId'
+          ],
+
           properties: {
-            id: { type: 'string', example: '66bc1234567890abcdef3456' },
-            orderId: { type: 'string', example: '66bc1234567890abcdef9012' },
-            driverId: { type: 'string', example: '66bc1234567890abcdef7890' },
-            status: { type: 'string', example: 'asignado' }
+            id: {
+              type: 'string'
+            },
+
+            orderId: {
+              type: 'string'
+            },
+
+            driverId: {
+              type: 'string'
+            },
+
+            status: {
+              type: 'string',
+              enum: [
+                'asignado',
+                'en_curso',
+                'completado'
+              ]
+            },
+
+            assignedAt: {
+              type: 'string',
+              format: 'date-time'
+            },
+
+            deliveredAt: {
+              type: 'string',
+              format: 'date-time'
+            }
           }
         },
-        ErrorResponse: {
+
+        Error: {
           type: 'object',
+
+          required: [
+            'status',
+            'statusCode',
+            'errorCode',
+            'message'
+          ],
+
           properties: {
-            status: { type: 'string', example: 'error' },
-            statusCode: { type: 'integer', example: 400 },
-            errorCode: { type: 'string', example: 'INVALID_DATA' },
-            message: { type: 'string', example: 'Los datos provistos son inválidos.' }
+            status: {
+              type: 'string',
+              example: 'fail'
+            },
+
+            statusCode: {
+              type: 'integer',
+              example: 400
+            },
+
+            errorCode: {
+              type: 'string',
+              example: 'ORDER_003'
+            },
+
+            message: {
+              type: 'string',
+              example:
+                'El estado indicado para el envío no es válido.'
+            }
+          }
+        },
+
+        Success: {
+          type: 'object',
+
+          properties: {
+            status: {
+              type: 'string',
+              example: 'success'
+            },
+
+            payload: {
+              nullable: true
+            }
           }
         }
       }
     }
   },
-  apis: ['./src/routes/*.js']
+
+  apis: [
+    './src/docs/*.js'
+  ]
 };
 
-export const swaggerSpec = swaggerJSDoc(swaggerOptions);
+export const swaggerSpec =
+  swaggerJSDoc(swaggerOptions);

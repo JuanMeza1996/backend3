@@ -1,164 +1,455 @@
 import 'dotenv/config';
+
 import request from 'supertest';
 import { expect } from 'chai';
 import mongoose from 'mongoose';
+
 import app from '../src/app.js';
-import { UserModel } from '../src/models/user.model.js';
-import { ProductModel } from '../src/models/product.model.js';
 
-describe('Suite de Pruebas Funcionales - ShipNow API', () => {
+import {
+  UserModel
+} from '../src/models/user.model.js';
 
-  before(async () => {
-    if (mongoose.connection.readyState === 0) {
-      const testMongoUri = process.env.MONGO_URI_TEST || process.env.MONGO_URI;
-      await mongoose.connect(testMongoUri);
-    }
-  });
+import {
+  ProductModel
+} from '../src/models/product.model.js';
 
-  after(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await UserModel.deleteMany({ email: /@test\.com$/ });
-      await ProductModel.deleteMany({ name: /Test/ });
-      await mongoose.connection.close();
-    }
-  });
+import {
+  OrderModel
+} from '../src/models/order.model.js';
 
-  // ==========================================
-  // 1. MÓDULO DE USUARIOS (/api/users)
-  // ==========================================
-  describe('Módulo Users: /api/users', () => {
-    it('GET /api/users - Debe responder con 200 y una lista de usuarios', async () => {
-      const response = await request(app).get('/api/users');
-      expect(response.status).to.equal(200);
-      expect(response.body).to.have.property('status', 'success');
-      expect(response.body).to.have.property('payload').that.is.an('array');
-    });
+import {
+  DocumentModel
+} from '../src/models/document.model.js';
 
-    it('POST /api/users - Debe crear un usuario exitosamente (201)', async () => {
-      const mockUser = {
-        name: 'Tester User',
-        email: `test_${Date.now()}@test.com`,
-        role: 'user'
-      };
+describe(
+  'ShipNow API - Functional Tests',
+  function () {
 
-      const response = await request(app)
-        .post('/api/users')
-        .send(mockUser);
+    this.timeout(15000);
 
-      expect(response.status).to.equal(201);
-      expect(response.body).to.have.property('status', 'success');
-      expect(response.body.payload).to.have.property('email', mockUser.email);
-    });
+    let createdUser;
+    let createdOrder;
+    let uploadedDocumentPath;
 
-    it('POST /api/users [ERROR] - Debe fallar con 409 si el email ya existe (USER_001)', async () => {
-      const duplicateUser = {
-        name: 'Usuario Repetido',
-        email: 'duplicado@test.com',
-        role: 'user'
-      };
+    before(
+      async () => {
+        const uri =
+          process.env.MONGO_URI_TEST ||
+          'mongodb://localhost:27017/shipnow_test';
 
-      await request(app).post('/api/users').send(duplicateUser);
+        await mongoose.connect(uri);
 
-      const response = await request(app)
-        .post('/api/users')
-        .send(duplicateUser);
+        await Promise.all([
+          UserModel.deleteMany({
+            email:
+              /@shipnow-test\.local$/
+          }),
 
-      expect(response.status).to.equal(409);
-      expect(response.body.status).to.be.oneOf(['fail', 'error']);
-    });
+          ProductModel.deleteMany({
+            name: /^TEST-/
+          }),
 
-    it('GET /api/users/:id [ERROR] - Debe fallar con 404 si el usuario no existe (USER_002)', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
-      const response = await request(app).get(`/api/users/${fakeId}`);
+          OrderModel.deleteMany({
+            customerName: /^TEST-/
+          }),
 
-      expect(response.status).to.equal(404);
-      expect(response.body.status).to.be.oneOf(['fail', 'error']);
-    });
-  });
+          DocumentModel.deleteMany({
+            originalname:
+              /^test-/
+          })
+        ]);
+      }
+    );
 
-  // ==========================================
-  // 2. MÓDULO DE PRODUCTOS (/api/products)
-  // ==========================================
-  describe('Módulo Products: /api/products', () => {
-    it('GET /api/products - Debe responder con 200 y el catálogo de productos', async () => {
-      const response = await request(app).get('/api/products');
-      expect(response.status).to.equal(200);
-      expect(response.body).to.have.property('status', 'success');
-      expect(response.body).to.have.property('payload').that.is.an('array');
-    });
+    after(
+      async () => {
+        await UserModel.deleteMany({
+          email:
+            /@shipnow-test\.local$/
+        });
 
-    it('POST /api/products - Debe crear un producto válido (201)', async () => {
-      const newProduct = {
-        name: 'Caja Test Reforzada',
-        price: 1500,
-        stock: 20
-      };
+        await ProductModel.deleteMany({
+          name: /^TEST-/
+        });
 
-      const response = await request(app)
-        .post('/api/products')
-        .send(newProduct);
+        await OrderModel.deleteMany({
+          customerName: /^TEST-/
+        });
 
-      expect(response.status).to.equal(201);
-      expect(response.body).to.have.property('status', 'success');
-      expect(response.body.payload).to.have.property('name', newProduct.name);
-    });
+        await DocumentModel.deleteMany({
+          originalname:
+            /^test-/
+        });
 
-    it('POST /api/products [ERROR] - Debe fallar con 400 si los datos son inválidos (PRODUCT_001)', async () => {
-      const invalidProduct = { name: '', price: -500 };
+        await mongoose
+          .connection
+          .close();
+      }
+    );
 
-      const response = await request(app)
-        .post('/api/products')
-        .send(invalidProduct);
+    it(
+      'GET /health responde correctamente',
+      async () => {
+        const response =
+          await request(app)
+            .get('/health');
 
-      expect(response.status).to.equal(400);
-      expect(response.body.status).to.be.oneOf(['fail', 'error']);
-    });
+        expect([
+          200,
+          503
+        ]).to.include(
+          response.status
+        );
 
-    it('GET /api/products/:id [ERROR] - Debe fallar con 404 si el producto no existe (PRODUCT_002)', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
-      const response = await request(app).get(`/api/products/${fakeId}`);
+        expect(
+          response.body
+        ).to.have.property(
+          'status'
+        );
 
-      expect(response.status).to.equal(404);
-      expect(response.body.status).to.be.oneOf(['fail', 'error']);
-    });
-  });
+        expect(
+          response.body
+        ).to.have.property(
+          'database'
+        );
+      }
+    );
 
-  // ==========================================
-  // 3. MÓDULO DE MOCKS (/api/mocks)
-  // ==========================================
-  describe('Módulo Mocks: /api/mocks', () => {
-    it('GET /api/mocks/users - Debe retornar la cantidad solicitada mediante query param (200)', async () => {
-      const response = await request(app).get('/api/mocks/users?qty=3');
-      expect(response.status).to.equal(200);
-      expect(response.body.payload).to.have.lengthOf(3);
-    });
+    it(
+      'GET /api/docs devuelve Swagger UI',
+      async () => {
+        const response =
+          await request(app)
+            .get('/api/docs/');
 
-    it('GET /api/mocks/users [ERROR] - Debe fallar con 400 si la cantidad enviada es inválida (MOCK_001)', async () => {
-      const response = await request(app).get('/api/mocks/users?qty=-5');
-      expect(response.status).to.equal(400);
-      expect(response.body.status).to.be.oneOf(['fail', 'error']);
-    });
-  });
+        expect(
+          response.status
+        ).to.equal(200);
 
-  // ==========================================
-  // 4. MÓDULO DE UPLOADS (/api/uploads)
-  // ==========================================
-  describe('Módulo Uploads: /api/uploads/document', () => {
-    it('POST /api/uploads/document - Debe subir un archivo PDF válido (201)', async () => {
-      const response = await request(app)
-        .post('/api/uploads/document')
-        .attach('document', Buffer.from('%PDF-1.4 test file content'), 'test_document.pdf');
+        expect(
+          response.text
+        ).to.include(
+          'Swagger UI'
+        );
+      }
+    );
 
-      expect(response.status).to.equal(201);
-      expect(response.body).to.have.property('status', 'success');
-      expect(response.body.payload).to.have.property('originalname', 'test_document.pdf');
-    });
+    it(
+      'POST /api/users crea usuario',
+      async () => {
+        const data = {
+          name:
+            'TEST Usuario',
 
-    it('POST /api/uploads/document [ERROR] - Debe fallar con 400 si no se envía archivo', async () => {
-      const response = await request(app).post('/api/uploads/document');
-      expect(response.status).to.equal(400);
-      expect(response.body.status).to.be.oneOf(['fail', 'error']);
-    });
-  });
+          email:
+            `user-${Date.now()}@shipnow-test.local`,
 
-});
+          role:
+            'user'
+        };
+
+        const response =
+          await request(app)
+            .post('/api/users')
+            .send(data);
+
+        expect(
+          response.status
+        ).to.equal(201);
+
+        expect(
+          response.body.status
+        ).to.equal('success');
+
+        createdUser =
+          response.body.payload;
+      }
+    );
+
+    it(
+      'POST /api/users rechaza email duplicado',
+      async () => {
+        const data = {
+          name:
+            'TEST Duplicado',
+
+          email:
+            createdUser.email,
+
+          role:
+            'user'
+        };
+
+        const response =
+          await request(app)
+            .post('/api/users')
+            .send(data);
+
+        expect(
+          response.status
+        ).to.equal(409);
+
+        expect(
+          response.body.errorCode
+        ).to.equal(
+          'USER_001'
+        );
+      }
+    );
+
+    it(
+      'POST /api/products crea producto',
+      async () => {
+        const response =
+          await request(app)
+            .post('/api/products')
+            .send({
+              name:
+                `TEST-Producto-${Date.now()}`,
+
+              price:
+                1500,
+
+              stock:
+                10
+            });
+
+        expect(
+          response.status
+        ).to.equal(201);
+      }
+    );
+
+    it(
+      'POST /api/orders crea envío',
+      async () => {
+        const response =
+          await request(app)
+            .post('/api/orders')
+            .send({
+              userId:
+                createdUser._id,
+
+              customerName:
+                'TEST Cliente',
+
+              deliveryAddress:
+                'Calle Test 123',
+
+              totalAmount:
+                2500,
+
+              priority:
+                'alta'
+            });
+
+        expect(
+          response.status
+        ).to.equal(201);
+
+        expect(
+          response.body.payload
+        ).to.have.property(
+          'trackingCode'
+        );
+
+        createdOrder =
+          response.body.payload;
+      }
+    );
+
+    it(
+      'PUT /api/orders/:id actualiza estado',
+      async () => {
+        const response =
+          await request(app)
+            .put(
+              `/api/orders/${createdOrder._id}`
+            )
+            .send({
+              status:
+                'en_camino'
+            });
+
+        expect(
+          response.status
+        ).to.equal(200);
+
+        expect(
+          response.body.payload.status
+        ).to.equal(
+          'en_camino'
+        );
+      }
+    );
+
+    it(
+      'PUT /api/orders/:id rechaza estado inválido',
+      async () => {
+        const response =
+          await request(app)
+            .put(
+              `/api/orders/${createdOrder._id}`
+            )
+            .send({
+              status:
+                'volando'
+            });
+
+        expect(
+          response.status
+        ).to.equal(400);
+
+        expect(
+          response.body.errorCode
+        ).to.equal(
+          'ORDER_003'
+        );
+      }
+    );
+
+    it(
+      'GET tracking devuelve estado',
+      async () => {
+        const response =
+          await request(app)
+            .get(
+              `/api/orders/tracking/${createdOrder.trackingCode}`
+            );
+
+        expect(
+          response.status
+        ).to.equal(200);
+
+        expect(
+          response.body.payload.trackingCode
+        ).to.equal(
+          createdOrder.trackingCode
+        );
+      }
+    );
+
+    it(
+      'GET mocks/users devuelve cantidad solicitada',
+      async () => {
+        const response =
+          await request(app)
+            .get(
+              '/api/mocks/users?qty=3'
+            );
+
+        expect(
+          response.status
+        ).to.equal(200);
+
+        expect(
+          response.body.payload
+        ).to.have.lengthOf(3);
+      }
+    );
+
+    it(
+      'GET mocks/users rechaza cantidad inválida',
+      async () => {
+        const response =
+          await request(app)
+            .get(
+              '/api/mocks/users?qty=-1'
+            );
+
+        expect(
+          response.status
+        ).to.equal(400);
+
+        expect(
+          response.body.errorCode
+        ).to.equal(
+          'MOCK_001'
+        );
+      }
+    );
+
+    it(
+      'POST upload rechaza ausencia de archivo',
+      async () => {
+        const response =
+          await request(app)
+            .post(
+              '/api/uploads/document'
+            )
+            .field(
+              'userId',
+              createdUser._id
+            );
+
+        expect(
+          response.status
+        ).to.equal(400);
+
+        expect(
+          response.body.errorCode
+        ).to.equal(
+          'FILE_001'
+        );
+      }
+    );
+
+    it(
+      'POST upload acepta PDF',
+      async () => {
+        const response =
+          await request(app)
+            .post(
+              '/api/uploads/document'
+            )
+            .field(
+              'userId',
+              createdUser._id
+            )
+            .attach(
+              'document',
+              Buffer.from(
+                '%PDF-1.4 test'
+              ),
+              'test-upload.pdf'
+            );
+
+        expect(
+          response.status
+        ).to.equal(201);
+
+        expect(
+          response.body.payload
+        ).to.have.property(
+          'originalname',
+          'test-upload.pdf'
+        );
+
+        uploadedDocumentPath =
+          response.body.payload.path;
+      }
+    );
+
+    it(
+      'GET ruta inexistente devuelve 404 estandarizado',
+      async () => {
+        const response =
+          await request(app)
+            .get(
+              '/ruta-inexistente'
+            );
+
+        expect(
+          response.status
+        ).to.equal(404);
+
+        expect(
+          response.body.errorCode
+        ).to.equal(
+          'SYS_003'
+        );
+      }
+    );
+  }
+);

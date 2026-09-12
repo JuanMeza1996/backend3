@@ -1,26 +1,24 @@
-import { Router } from 'express';
-import { logger } from '../utils/logger.js';
+import {
+  Router
+} from 'express';
 
-const router = Router();
+import {
+  LoggerController
+} from '../controllers/logger.controller.js';
 
-/**
- * @openapi
- * /api/logger-test:
- *   get:
- *     summary: Probar los niveles de logger (Winston)
- *     tags: [Logger]
- *     responses:
- *       200:
- *         description:Logs emitidos correctamente.
- */
-router.get('/', (req, res) => {
-  logger.debug('Log de prueba: DEBUG');
-  logger.http('Log de prueba: HTTP');
-  logger.info('Log de prueba: INFO');
-  logger.warning('Log de prueba: WARNING');
-  logger.error('Log de prueba: ERROR');
-  logger.fatal('Log de prueba: FATAL');
-  res.json({ status: 'success', message: 'Logger test ejecutado' });
-});
+const router =
+  Router();
+
+const controller =
+  new LoggerController();
+
+router.get(
+  '/',
+  (req, res) =>
+    controller.test(
+      req,
+      res
+    )
+);
 
 export default router;

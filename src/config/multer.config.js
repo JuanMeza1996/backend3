@@ -1,33 +1,51 @@
-import multer from 'multer';
+import fs from 'fs';
 import path from 'path';
+import multer from 'multer';
+
+import { config } from './env.config.js';
+import { ALLOWED_FILE_TYPES } from '../constants/index.js';
 import { AppError } from '../errors/AppError.js';
 import { ErrorDictionary } from '../constants/errorDictionary.js';
 
+const uploadPath = path.resolve(config.uploadDir);
+
+fs.mkdirSync(uploadPath, {
+  recursive: true
+});
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/documents/');
+    cb(null, uploadPath);
   },
+
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const uniqueName =
+      `${Date.now()}-${Math.round(Math.random() * 1e9)}` +
+      path.extname(file.originalname).toLowerCase();
+
+    cb(null, uniqueName);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new AppError(ErrorDictionary.INVALID_FILE_TYPE || {
-      statusCode: 400,
-      errorCode: 'FILE_001',
-      message: 'Tipo de archivo no permitido. Solo se aceptan JPG, PNG o PDF.'
-    }), false);
+  if (!ALLOWED_FILE_TYPES.includes(file.mimetype)) {
+    return cb(
+      new AppError(
+        ErrorDictionary.INVALID_FILE_TYPE
+      )
+    );
   }
+
+  cb(null, true);
 };
 
 export const uploadMiddleware = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+  limits: {
+    fileSize:
+      config.maxFileSizeMb * 1024 * 1024,
+
+    files: 1
+  }
 });

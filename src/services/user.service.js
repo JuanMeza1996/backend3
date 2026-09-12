@@ -1,33 +1,103 @@
-import { UserModel } from '../models/user.model.js';
+import mongoose from 'mongoose';
+
 import { AppError } from '../errors/AppError.js';
 import { ErrorDictionary } from '../constants/errorDictionary.js';
+import { USER_ROLES } from '../constants/index.js';
+import { UserRepository } from '../repositories/user.repository.js';
 
 export class UserService {
-  async getUsers() {
-    return await UserModel.find();
+  constructor(
+    repository = new UserRepository()
+  ) {
+    this.repository = repository;
   }
 
-  async createUser(userData) {
-    const existingUser = await UserModel.findOne({ email: userData.email });
-    if (existingUser) {
-      throw new AppError(ErrorDictionary.USER_001 || {
-        statusCode: 409,
-        errorCode: 'USER_001',
-        message: 'El email ingresado ya se encuentra registrado.'
-      });
+  async getUsers({
+    page = 1,
+    limit = 10
+  } = {}) {
+    if (
+      !Number.isInteger(page) ||
+      page < 1 ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 100
+    ) {
+      throw new AppError(
+        ErrorDictionary.INVALID_DATA
+      );
     }
-    return await UserModel.create(userData);
+
+    return this.repository.findAll({
+      page,
+      limit
+    });
+  }
+
+  async createUser(data) {
+    if (
+      !data?.name ||
+      !data?.email
+    ) {
+      throw new AppError(
+        ErrorDictionary.INVALID_USER_DATA
+      );
+    }
+
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        .test(data.email)
+    ) {
+      throw new AppError(
+        ErrorDictionary.INVALID_USER_DATA
+      );
+    }
+
+    if (
+      data.role &&
+      !Object.values(USER_ROLES)
+        .includes(data.role)
+    ) {
+      throw new AppError(
+        ErrorDictionary.INVALID_USER_DATA
+      );
+    }
+
+    const email =
+      data.email.toLowerCase();
+
+    const existing =
+      await this.repository
+        .findByEmail(email);
+
+    if (existing) {
+      throw new AppError(
+        ErrorDictionary.EMAIL_ALREADY_REGISTERED
+      );
+    }
+
+    return this.repository.create({
+      ...data,
+      email
+    });
   }
 
   async getUserById(id) {
-    const user = await UserModel.findById(id);
-    if (!user) {
-      throw new AppError(ErrorDictionary.USER_002 || {
-        statusCode: 404,
-        errorCode: 'USER_002',
-        message: 'El usuario solicitado no existe.'
-      });
+    if (!mongoose.isValidObjectId(id)) {
+      throw new AppError(
+        ErrorDictionary.INVALID_ID
+      );
     }
+
+    const user =
+      await this.repository.findById(id);
+
+    if (!user) {
+      throw new AppError(
+        ErrorDictionary.USER_NOT_FOUND
+      );
+    }
+
     return user;
   }
 }

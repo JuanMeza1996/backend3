@@ -1,34 +1,65 @@
-import { Router } from 'express';
-import { MockController } from '../controllers/mock.controller.js';
-import { generateMockDrivers, generateMockOrders, seedDatabaseService } from '../services/mock.service.js';
+import {
+  Router
+} from 'express';
 
-const router = Router();
-const mockController = new MockController();
+import {
+  MockController
+} from '../controllers/mock.controller.js';
 
-// Endpoint de Usuarios (usando Controller para validar qty y lanzar MOCK_001)
-router.get('/users', (req, res, next) => mockController.getMockUsers(req, res, next));
+const router =
+  Router();
 
-// Endpoint de Repartidores
-router.get('/drivers', (req, res) => {
-  const qty = parseInt(req.query.qty) || 5;
-  res.json({ status: 'success', payload: generateMockDrivers(qty) });
-});
+const controller =
+  new MockController();
 
-// Endpoint de Pedidos
-router.get('/orders', (req, res) => {
-  const qty = parseInt(req.query.qty) || 5;
-  res.json({ status: 'success', payload: generateMockOrders(qty) });
-});
+router.get(
+  '/users',
+  (req, res, next) =>
+    controller.getUsers(
+      req,
+      res,
+      next
+    )
+);
 
-// Seeding en Base de Datos
-router.post('/seed', async (req, res, next) => {
-  try {
-    const { usersQty, ordersQty, driversQty } = req.body;
-    const result = await seedDatabaseService(usersQty, ordersQty, driversQty);
-    res.status(201).json({ status: 'success', message: 'Seeding completado con éxito', payload: result });
-  } catch (error) {
-    next(error);
-  }
-});
+router.get(
+  '/products',
+  (req, res, next) =>
+    controller.getProducts(
+      req,
+      res,
+      next
+    )
+);
+
+router.get(
+  '/drivers',
+  (req, res, next) =>
+    controller.getDrivers(
+      req,
+      res,
+      next
+    )
+);
+
+router.get(
+  '/orders',
+  (req, res, next) =>
+    controller.getOrders(
+      req,
+      res,
+      next
+    )
+);
+
+router.post(
+  '/seed',
+  (req, res, next) =>
+    controller.seed(
+      req,
+      res,
+      next
+    )
+);
 
 export default router;

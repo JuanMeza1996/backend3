@@ -1,34 +1,85 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 
-const customLevels = {
-  levels: { fatal: 0, error: 1, warning: 2, info: 3, http: 4, debug: 5 },
-  colors: { fatal: 'magenta', error: 'red', warning: 'yellow', info: 'green', http: 'cyan', debug: 'blue' }
-};
+import {
+  config,
+  isProduction
+} from '../config/env.config.js';
 
-winston.addColors(customLevels.colors);
+const {
+  combine,
+  timestamp,
+  json,
+  colorize,
+  printf
+} = winston.format;
 
-const isProduction = process.env.NODE_ENV === 'production';
+const fileFormat =
+  combine(
+    timestamp(),
+    json()
+  );
 
-export const logger = winston.createLogger({
-  levels: customLevels.levels,
-  format: winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winston.format.printf(({ timestamp, level, message }) => `${timestamp} [${level.toUpperCase()}]: ${message}`)
-  ),
-  transports: [
-    new winston.transports.Console({
-      level: isProduction ? 'info' : 'debug',
-      format: winston.format.combine(
-        winston.format.colorize({ all: true }),
-        winston.format.printf(({ timestamp, level, message }) => `${timestamp} [${level}]: ${message}`)
-      )
+const consoleFormat =
+  combine(
+    colorize(),
+    timestamp({
+      format:
+        'YYYY-MM-DD HH:mm:ss'
     }),
-    new winston.transports.DailyRotateFile({
-      filename: 'logs/error-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      level: 'error',
-      maxFiles: '14d'
+
+    printf(
+      ({
+        timestamp: time,
+        level,
+        message
+      }) =>
+        `${time} [${level.toUpperCase()}]: ${message}`
+    )
+  );
+
+const transports = [
+  new winston.transports.DailyRotateFile({
+    filename:
+      'logs/error-%DATE%.log',
+
+    datePattern:
+      'YYYY-MM-DD',
+
+    level: 'error',
+
+    maxFiles: '14d',
+
+    format: fileFormat
+  }),
+
+  new winston.transports.DailyRotateFile({
+    filename:
+      'logs/combined-%DATE%.log',
+
+    datePattern:
+      'YYYY-MM-DD',
+
+    level: config.logLevel,
+
+    maxFiles: '14d',
+
+    format: fileFormat
+  })
+];
+
+if (!isProduction) {
+  transports.push(
+    new winston.transports.Console({
+      level: config.logLevel,
+      format: consoleFormat
     })
-  ]
-});
+  );
+}
+
+export const logger =
+  winston.createLogger({
+    level: config.logLevel,
+    format: fileFormat,
+    transports
+  });

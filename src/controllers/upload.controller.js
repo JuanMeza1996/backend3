@@ -1,15 +1,29 @@
-import { UploadService } from '../services/upload.service.js';
+import {
+  UploadService
+} from '../services/upload.service.js';
 
-const uploadService = new UploadService();
+const service =
+  new UploadService();
 
 export class UploadController {
-  async uploadDocument(req, res, next) {
+  async uploadDocument(
+    req,
+    res,
+    next
+  ) {
     try {
-      const savedDocument = await uploadService.saveDocumentMetadata(req.file);
+      const document =
+        await service
+          .saveDocumentMetadata(
+            req.file,
+            req.body
+          );
+
       res.status(201).json({
         status: 'success',
-        message: 'Archivo subido y metadatos registrados con éxito',
-        payload: savedDocument
+        message:
+          'Archivo subido y metadatos registrados correctamente.',
+        payload: document
       });
     } catch (error) {
       next(error);

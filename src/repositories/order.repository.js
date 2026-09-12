@@ -1,28 +1,28 @@
-import { UserModel } from '../models/user.model.js';
+import { OrderModel } from '../models/order.model.js';
 
-export class UserRepository {
+export class OrderRepository {
   async findAll({
     page = 1,
-    limit = 10
+    limit = 20
   } = {}) {
     const skip = (page - 1) * limit;
 
     const [
-      users,
+      orders,
       total
     ] = await Promise.all([
-      UserModel
+      OrderModel
         .find()
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
 
-      UserModel.countDocuments()
+      OrderModel.countDocuments()
     ]);
 
     return {
-      docs: users,
+      docs: orders,
       totalDocs: total,
       page,
       limit,
@@ -31,23 +31,25 @@ export class UserRepository {
   }
 
   async findById(id) {
-    return UserModel
+    return OrderModel
       .findById(id)
       .lean();
   }
 
-  async findByEmail(email) {
-    return UserModel
-      .findOne({ email })
+  async findByTrackingCode(
+    trackingCode
+  ) {
+    return OrderModel
+      .findOne({ trackingCode })
       .lean();
   }
 
   async create(data) {
-    return UserModel.create(data);
+    return OrderModel.create(data);
   }
 
   async updateById(id, data) {
-    return UserModel
+    return OrderModel
       .findByIdAndUpdate(
         id,
         data,

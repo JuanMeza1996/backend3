@@ -1,13 +1,35 @@
 export class AppError extends Error {
-  constructor(errorKey, customMessage = null) {
-    const errorData = errorKey || {};
-    super(customMessage || errorData.message || 'Error interno');
-    
-    this.statusCode = errorData.statusCode || 500;
-    this.errorCode = errorData.code || 'UNKNOWN_ERROR';
-    this.status = `${this.statusCode}`.startsWith('4') ? 'fail' : 'error';
-    this.isOperational = true; // Permite diferenciar errores controlados de bugs no previstos
+  constructor(
+    errorData = {},
+    customMessage = null
+  ) {
+    super(
+      customMessage ||
+      errorData.message ||
+      'Error interno del servidor.'
+    );
 
-    Error.captureStackTrace(this, this.constructor);
+    this.name = 'AppError';
+
+    this.statusCode =
+      errorData.statusCode || 500;
+
+    this.errorCode =
+      errorData.errorCode ||
+      errorData.code ||
+      'SYS_001';
+
+    this.status =
+      this.statusCode >= 400 &&
+      this.statusCode < 500
+        ? 'fail'
+        : 'error';
+
+    this.isOperational = true;
+
+    Error.captureStackTrace(
+      this,
+      this.constructor
+    );
   }
 }

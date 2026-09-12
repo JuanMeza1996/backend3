@@ -1,11 +1,46 @@
-import { Schema, model } from 'mongoose';
+import {
+  Schema,
+  model
+} from 'mongoose';
 
-const driverSchema = new Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  phone: { type: String, required: true },
-  vehicle: { type: String, required: true },
-  isAvailable: { type: Boolean, default: true }
-}, { timestamps: true });
+const driverSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
 
-export const DriverModel = model('Driver', driverSchema);
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+
+    phone: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    vehicle: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    isAvailable: {
+      type: Boolean,
+      default: true
+    }
+  },
+  {
+    timestamps: true,
+    versionKey: false
+  }
+);
+
+export const DriverModel =
+  model('Driver', driverSchema);

@@ -1,33 +1,70 @@
-import { UserService } from '../services/user.service.js';
+import {
+  UserService
+} from '../services/user.service.js';
 
-const userService = new UserService();
+const service =
+  new UserService();
 
 export class UserController {
-  async getUsers(req, res, next) {
+  async getUsers(
+    req,
+    res,
+    next
+  ) {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      
-      const result = await userService.getUsers({ page, limit });
-      res.status(200).json({ status: 'success', payload: result });
+      const result =
+        await service.getUsers({
+          page:
+            Number(req.query.page) || 1,
+
+          limit:
+            Number(req.query.limit) || 10
+        });
+
+      res.json({
+        status: 'success',
+        payload: result
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async createUser(req, res, next) {
+  async createUser(
+    req,
+    res,
+    next
+  ) {
     try {
-      const newUser = await userService.createUser(req.body);
-      res.status(201).json({ status: 'success', payload: newUser });
+      const user =
+        await service.createUser(
+          req.body
+        );
+
+      res.status(201).json({
+        status: 'success',
+        payload: user
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async getUserById(req, res, next) {
+  async getUserById(
+    req,
+    res,
+    next
+  ) {
     try {
-      const user = await userService.getUserById(req.params.id);
-      res.status(200).json({ status: 'success', payload: user });
+      const user =
+        await service.getUserById(
+          req.params.id
+        );
+
+      res.json({
+        status: 'success',
+        payload: user
+      });
     } catch (error) {
       next(error);
     }

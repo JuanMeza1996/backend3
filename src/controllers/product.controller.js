@@ -1,30 +1,70 @@
-import { ProductService } from '../services/product.service.js';
+import {
+  ProductService
+} from '../services/product.service.js';
 
-const productService = new ProductService();
+const service =
+  new ProductService();
 
 export class ProductController {
-  async getProducts(req, res, next) {
+  async getProducts(
+    req,
+    res,
+    next
+  ) {
     try {
-      const products = await productService.getProducts();
-      res.status(200).json({ status: 'success', payload: products });
+      const result =
+        await service.getProducts({
+          page:
+            Number(req.query.page) || 1,
+
+          limit:
+            Number(req.query.limit) || 20
+        });
+
+      res.json({
+        status: 'success',
+        payload: result
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async createProduct(req, res, next) {
+  async createProduct(
+    req,
+    res,
+    next
+  ) {
     try {
-      const newProduct = await productService.createProduct(req.body);
-      res.status(201).json({ status: 'success', payload: newProduct });
+      const product =
+        await service.createProduct(
+          req.body
+        );
+
+      res.status(201).json({
+        status: 'success',
+        payload: product
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async getProductById(req, res, next) {
+  async getProductById(
+    req,
+    res,
+    next
+  ) {
     try {
-      const product = await productService.getProductById(req.params.id);
-      res.status(200).json({ status: 'success', payload: product });
+      const product =
+        await service.getProductById(
+          req.params.id
+        );
+
+      res.json({
+        status: 'success',
+        payload: product
+      });
     } catch (error) {
       next(error);
     }

@@ -1,15 +1,46 @@
-import { Schema, model } from 'mongoose';
-import { PRODUCT_STATUS } from '../constants/index.js';
+import {
+  Schema,
+  model
+} from 'mongoose';
 
-const productSchema = new Schema({
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
-    stock: { type: Number, required: true, default: 0 },
-    status: { 
-        type: String, 
-        enum: Object.values(PRODUCT_STATUS), 
-        default: PRODUCT_STATUS.AVAILABLE 
+import {
+  PRODUCT_STATUS
+} from '../constants/index.js';
+
+const productSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 150
+    },
+
+    price: {
+      type: Number,
+      required: true,
+      min: 0.01
+    },
+
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0
+    },
+
+    status: {
+      type: String,
+      enum: Object.values(PRODUCT_STATUS),
+      default: PRODUCT_STATUS.AVAILABLE
     }
-}, { timestamps: true });
+  },
+  {
+    timestamps: true,
+    versionKey: false
+  }
+);
 
-export const ProductModel = model('Product', productSchema);
+export const ProductModel =
+  model('Product', productSchema);

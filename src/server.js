@@ -1,17 +1,75 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import mongoose from 'mongoose';
 
 import app from './app.js';
-import mongoose from 'mongoose';
-import { logger } from './utils/logger.js';
 
-const PORT = process.env.PORT || 8080;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://Ivory:Tattoo1978@cluster0.2bcqzrd.mongodb.net/shipnow?retryWrites=true&w=majority&appName=Cluster0';
+import {
+  config
+} from './config/env.config.js';
 
-mongoose.connect(MONGO_URI)
-  .then(() => logger.info('Conexión a MongoDB establecida con éxito'))
-  .catch(err => logger.fatal(`Error al conectar a MongoDB: ${err.message}`));
+import {
+  logger
+} from './utils/logger.js';
 
-app.listen(PORT, () => {
-  logger.info(`Servidor ShipNow escuchando en el puerto ${PORT}`);
-});
+const startServer =
+  async () => {
+    try {
+      await mongoose.connect(
+        config.mongoUri
+      );
+
+      logger.info(
+        'Conexión a MongoDB establecida.'
+      );
+
+      const server =
+        app.listen(
+          config.port,
+          () => {
+            logger.info(
+              `ShipNow escuchando en el puerto ${config.port}.`
+            );
+          }
+        );
+
+      const shutdown =
+        async signal => {
+          logger.info(
+            `Recibida señal ${signal}. Cerrando servidor.`
+          );
+
+          server.close(
+            async () => {
+              await mongoose
+                .connection
+                .close();
+
+              process.exit(0);
+            }
+          );
+        };
+
+      process.on(
+        'SIGINT',
+        () =>
+          shutdown(
+            'SIGINT'
+          )
+      );
+
+      process.on(
+        'SIGTERM',
+        () =>
+          shutdown(
+            'SIGTERM'
+          )
+      );
+    } catch (error) {
+      logger.error(
+        `No fue posible iniciar ShipNow: ${error.message}`
+      );
+
+      process.exit(1);
+    }
+  };
+
+startServer();

@@ -1,32 +1,68 @@
-import { ProductModel } from '../models/product.model.js';
+import mongoose from 'mongoose';
+
 import { AppError } from '../errors/AppError.js';
 import { ErrorDictionary } from '../constants/errorDictionary.js';
+import { ProductRepository } from '../repositories/product.repository.js';
 
 export class ProductService {
-  async getProducts() {
-    return await ProductModel.find();
+  constructor(
+    repository = new ProductRepository()
+  ) {
+    this.repository = repository;
   }
 
-  async createProduct(productData) {
-    if (!productData.name || !productData.price || productData.price <= 0) {
-      throw new AppError(ErrorDictionary.PRODUCT_001 || {
-        statusCode: 400,
-        errorCode: 'PRODUCT_001',
-        message: 'Los datos del producto son inválidos o están incompletos.'
-      });
+  async getProducts({
+    page = 1,
+    limit = 20
+  } = {}) {
+    return this.repository.findAll({
+      page,
+      limit
+    });
+  }
+
+  async createProduct(data) {
+    if (
+      !data?.name ||
+      typeof data.price !== 'number' ||
+      data.price <= 0 ||
+      typeof data.stock !== 'number' ||
+      data.stock < 0
+    ) {
+      throw new AppError(
+        ErrorDictionary.INVALID_PRODUCT_DATA
+      );
     }
-    return await ProductModel.create(productData);
+
+    const existing =
+      await this.repository
+        .findByName(data.name);
+
+    if (existing) {
+      throw new AppError(
+        ErrorDictionary.PRODUCT_ALREADY_EXISTS
+      );
+    }
+
+    return this.repository.create(data);
   }
 
   async getProductById(id) {
-    const product = await ProductModel.findById(id);
-    if (!product) {
-      throw new AppError(ErrorDictionary.PRODUCT_002 || {
-        statusCode: 404,
-        errorCode: 'PRODUCT_002',
-        message: 'El producto solicitado no existe.'
-      });
+    if (!mongoose.isValidObjectId(id)) {
+      throw new AppError(
+        ErrorDictionary.INVALID_ID
+      );
     }
+
+    const product =
+      await this.repository.findById(id);
+
+    if (!product) {
+      throw new AppError(
+        ErrorDictionary.PRODUCT_NOT_FOUND
+      );
+    }
+
     return product;
   }
 }

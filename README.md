@@ -1,182 +1,228 @@
-# ShipNow API - Refactorización a Arquitectura por Capas
+# ShipNow API — Entrega Final
 
-Proyecto de backend refactorizado desde una arquitectura monolítica a un patrón profesional de 3 capas (**Controller - Service - Repository**) con inyección y validación estricta de variables de entorno.
-API REST para la gestión de envíos, mocking, logging con rotación, documentación interactiva, performance, health check y subida de comprobantes.
+API REST backend profesional para gestionar **usuarios, envíos, tracking, entregas, productos, mocks y comprobantes/archivos**. El proyecto está preparado para revisión académica y ejecución local o mediante Docker.
 
----
+## Tecnologías
 
-## 🚀 Instrucciones para ejecutar localmente
+- Node.js 20 + Express 4
+- MongoDB + Mongoose
+- Arquitectura **Controller → Service → Repository → Model**
+- Multer para carga de archivos
+- Winston + Daily Rotate File para logging
+- Swagger / OpenAPI 3
+- Mocha + Chai + Supertest
+- Docker + Docker Compose
+- Faker para datos simulados
 
-1. **Clonar el repositorio e instalar dependencias:**
-   git clone https://github.com/JuanMeza1996/backend3.git
-   cd backend3
-   npm install
+## Arquitectura
 
-2. **Configurar las variables de entorno:**
-   Crear un archivo .env en la raíz del proyecto tomando como referencia el .env.example:
-   PORT=8080
-   MONGO_URI=mongodb+srv://usuario:password@cluster.mongodb.net/shipnow?retryWrites=true&w=majority
-   MONGO_URI_TEST=mongodb+srv://usuario:password@cluster.mongodb.net/shipnow_test?retryWrites=true&w=majority
-   NODE_ENV=development
-   LOG_LEVEL=info
-   JWT_SECRET=super_secreto_jwt
+```text
+src/
+├── config/          # configuración de entorno, Multer y Swagger
+├── constants/       # estados, roles y códigos de error
+├── controllers/     # HTTP: recibe request y construye response
+├── errors/          # AppError
+├── middlewares/     # manejo global de errores
+├── models/          # schemas Mongoose
+├── repositories/    # ÚNICO acceso de persistencia
+├── routes/          # definición de endpoints, sin lógica de negocio
+├── services/        # reglas de negocio
+└── utils/           # logger
+test/                # pruebas funcionales
+uploads/             # directorio runtime, sin archivos locales
+```
 
-3. **Iniciar la aplicación:**
-   npm run dev
+Las rutas no acceden directamente a MongoDB. Los services contienen las validaciones y reglas de negocio y los repositories concentran las operaciones de persistencia.
 
----
+## Variables de entorno
 
-## 🛠️ Performance & Optimización
+Copiar `.env.example` como `.env` y completar:
 
-- **Paginación en Listados:** Los endpoints de lectura masiva (/api/users, /api/products) reciben parámetros de paginación (page y limit) para no saturar la base de datos ni devolver colecciones descontroladas.
-- **Control de Carga de Archivos:** Límite estricto de peso (5 MB), filtro de extensiones permitidas (.pdf, .png, .jpg, .jpeg) y guardado fuera del código fuente.
-- **Operaciones Asíncronas:** Procesamiento no bloqueante del Event Loop con rotación diaria de logs mediante Winston.
+| Variable | Descripción |
+|---|---|
+| `PORT` | Puerto HTTP, por defecto 8080 |
+| `MONGO_URI` | Base MongoDB de desarrollo |
+| `MONGO_URI_TEST` | **Base de datos independiente para tests** |
+| `NODE_ENV` | `development`, `test` o `production` |
+| `LOG_LEVEL` | Nivel Winston (`info`, `debug`, etc.) |
+| `UPLOAD_MAX_MB` | Límite de archivos; recomendado 5 |
+| `MAX_PAGE_SIZE` | Máximo de elementos por página |
+| `ENABLE_INTERNAL_ENDPOINTS` | Habilita mocks/logger internos fuera de producción |
 
----
+**Nunca subir `.env` real al repositorio.**
 
-## 🏥 Endpoint de Health Check (GET /health)
+## Instalación y ejecución local
 
-Proporciona un diagnóstico rápido del estado del servidor sin exponer credenciales ni datos sensibles.
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd backend3
+npm install
+cp .env.example .env
+npm run dev
+```
 
-- **Ruta:** GET /health
-- **Respuesta (200 OK):**
-  {
-    "status": "OK",
-    "environment": "development",
-    "uptime": "120s",
-    "timestamp": "2026-09-07T12:00:00.000Z"
-  }
+En Windows, crear `.env` manualmente copiando `.env.example`.
 
-*Criterio sobre endpoints internos:* En entorno de desarrollo (NODE_ENV=development) están habilitados Swagger UI (/api/docs), Mocks (/api/mocks) y Logger Test (/api/logger-test). En producción (NODE_ENV=production), los endpoints de mocking se restringen por motivos de seguridad.
+API: `http://localhost:8080`
 
----
+Swagger: `http://localhost:8080/api/docs`
 
-## 🧪 Documentación de Endpoints Mock (/api/mocks)
+Health: `http://localhost:8080/health`
 
-La API permite simular y poblar datos en memoria o persistirlos en MongoDB de manera controlada.
+## Tests
 
-### 1. Obtener Usuarios Simulados
-- **Ruta:** GET /api/mocks/users?qty=5
-- **Descripción:** Devuelve una lista de usuarios ficticios sin tocar la base de datos.
-- **Parámetros Query:** qty (opcional, por defecto 5).
+Los tests utilizan `MONGO_URI_TEST`, que debe apuntar a una base separada de desarrollo/producción.
 
-### 2. Obtener Repartidores Simulados
-- **Ruta:** GET /api/mocks/drivers?qty=5
-- **Descripción:** Devuelve una lista de repartidores con vehículo y disponibilidad simulados.
-- **Parámetros Query:** qty (opcional, por defecto 5).
-
-### 3. Obtener Pedidos Simulados
-- **Ruta:** GET /api/mocks/orders?qty=5
-- **Descripción:** Genera pedidos simulados con direcciones y montos aleatorios.
-- **Parámetros Query:** qty (opcional, por defecto 5).
-
-### 4. Poblar la Base de Datos (Seeding)
-- **Ruta:** POST /api/mocks/seed
-- **Body (JSON):**
-  {
-    "usersQty": 10,
-    "ordersQty": 10,
-    "driversQty": 5
-  }
-
----
-
-## ⚠️ Ejemplos de Respuestas de Error (Middleware Global)
-
-La API procesa todas las excepciones y las estandariza utilizando el diccionario de errores.
-
-### 1. Cantidad Inválida en Mocks (MOCK_001)
-- **Petición:** GET /api/mocks/users?qty=0 o GET /api/mocks/users?qty=-5
-- **Respuesta (400 Bad Request):**
-  {
-    "status": "error",
-    "statusCode": 400,
-    "errorCode": "MOCK_001",
-    "message": "La cantidad enviada no es un número entero positivo válido."
-  }
-
-### 2. Email Duplicado en Usuarios (USER_001)
-- **Petición:** POST /api/users
-- **Respuesta (409 Conflict):**
-  {
-    "status": "error",
-    "statusCode": 409,
-    "errorCode": "USER_001",
-    "message": "El email ingresado ya se encuentra registrado."
-  }
-
-### 3. Recurso No Encontrado (USER_002 / PRODUCT_002)
-- **Petición:** GET /api/users/650c1234567890abcdef1234
-- **Respuesta (404 Not Found):**
-  {
-    "status": "error",
-    "statusCode": 404,
-    "errorCode": "USER_002",
-    "message": "El usuario solicitado no existe."
-  }
-
----
-
-## 🧪 Testing Funcional Automatizado
-
-Las pruebas integradas evalúan los flujos exitosos (*Happy Path*) y el control de excepciones (*Error Path*) utilizando **Mocha**, **Chai** y **Supertest**.
-
-### Módulos Coberturados por los Tests:
-1. **Usuarios (/api/users):**
-   - Obtención de lista completa (`200 OK`).
-   - Creación de nuevo usuario (`201 Created`).
-   - Control de email duplicado (`409 Conflict` - `USER_001`).
-   - Consulta por ID inexistente (`404 Not Found` - `USER_002`).
-2. **Productos (/api/products):**
-   - Obtención de productos (`200 OK`).
-   - Creación de producto válido (`201 Created`).
-   - Validación de datos o precios inválidos (`400 Bad Request` - `PRODUCT_001`).
-   - Consulta por ID inexistente (`404 Not Found` - `PRODUCT_002`).
-3. **Mocks y Logger:**
-   - Generación en memoria con query param `qty` (`200 OK`).
-   - Control de cantidad negativa (`400 Bad Request` - `MOCK_001`).
-4. **Manejo Global de Errores y Uploads:**
-   - Subida válida de PDF comprobante (`201 Created`).
-   - Rechazo de petición de subida sin archivo (`400 Bad Request`).
-
-### Ejecución de Pruebas:
+```bash
 npm test
+```
 
----
+La suite cubre, entre otros:
 
-## 📁 Carga y Gestión de Archivos (Multer & Mongoose)
+- health check y estado de MongoDB
+- Swagger
+- creación y actualización de envíos
+- tracking
+- errores 404 y validación de estados
+- usuarios y email duplicado
+- mocks y cantidad inválida
+- carga de PDF
+- ausencia de archivo
+- tipo de archivo inválido
+- 404 global
 
-El sistema cuenta con un módulo desacoplado en 3 capas (UploadController, UploadService, DocumentModel) para la recepción, filtrado y persistencia de comprobantes.
+No se utiliza la base de datos de producción durante las pruebas.
 
-- **Endpoint:** POST /api/uploads/document (multipart/form-data)
-- **Campo esperado:** document
-- **Tipos permitidos:** .jpg, .png, .pdf (Filtro con AppError para formatos no válidos).
-- **Límite de tamaño:** 5 MB.
-- **Persistencia de Archivos:** Guardados localmente en /uploads/documents/ (directorio en .gitignore).
-- **Persistencia de Metadatos:** Cada archivo exitoso guarda su registro en MongoDB mediante Mongoose (filename, originalname, mimetype, size, path).
+## Swagger / OpenAPI
 
----
+La documentación interactiva está disponible en:
 
-## 🐳 Contenerización con Docker
+`GET /api/docs`
 
-### 1. Construir la imagen Docker:
+Incluye schemas de **User, Order/Envío, Delivery, Product, Error y Success**, parámetros de paginación y respuestas de error.
+
+## Endpoints principales
+
+| Método | Endpoint | Función |
+|---|---|---|
+| GET | `/health` | Health check |
+| GET/POST | `/api/users` | Listar / crear usuarios |
+| GET | `/api/users/:id` | Obtener usuario |
+| GET/POST | `/api/products` | Listar / crear productos |
+| GET | `/api/products/:id` | Obtener producto |
+| GET/POST | `/api/orders` | Listar / crear envíos |
+| GET | `/api/orders/:id` | Obtener envío |
+| PUT | `/api/orders/:id` | Actualizar envío |
+| GET | `/api/orders/:idOrCode/tracking` | Tracking por ID o código |
+| GET/POST | `/api/deliveries` | Listar / crear entregas |
+| GET/PUT | `/api/deliveries/:id` | Consultar / actualizar entrega |
+| POST | `/api/uploads/users/:id` | Documento asociado a usuario |
+| POST | `/api/uploads/orders/:id` | Comprobante asociado a envío |
+| POST | `/api/uploads/deliveries/:id` | Comprobante asociado a entrega |
+| GET | `/api/mocks/users?qty=5` | Usuarios simulados |
+| GET | `/api/mocks/drivers?qty=5` | Repartidores simulados |
+| GET | `/api/mocks/orders?qty=5` | Envíos simulados |
+| POST | `/api/mocks/seed` | Seed controlado |
+| GET | `/api/logger-test` | Prueba de logger (solo endpoints internos habilitados) |
+
+## Respuestas y manejo global de errores
+
+Todas las excepciones pasan por un middleware global y mantienen una estructura consistente:
+
+```json
+{
+  "status": "fail",
+  "statusCode": 400,
+  "errorCode": "DATA_001",
+  "message": "Los datos enviados son inválidos o están incompletos."
+}
+```
+
+Se contemplan errores personalizados para:
+
+- recurso no encontrado
+- datos inválidos
+- estado inválido
+- cantidad de mocks inválida
+- archivo requerido
+- tipo de archivo inválido
+- archivo demasiado grande
+- errores de validación de Mongoose
+- duplicados
+- errores internos
+
+## Logging
+
+Winston está centralizado en `src/utils/logger.js`.
+
+- `logs/error-YYYY-MM-DD.log`: errores
+- `logs/combined-YYYY-MM-DD.log`: actividad general
+- rotación diaria y retención de 14 días
+- consola **solo en development/test**
+- producción escribe en archivos y no contamina stdout con logs de aplicación
+
+`logs/` está excluido de Git.
+
+## Carga de archivos
+
+Multer acepta:
+
+- PDF
+- JPG/JPEG
+- PNG
+- máximo 5 MB
+- un archivo por request
+
+Los archivos se guardan en `uploads/documents/` y los metadatos se persisten en MongoDB con su propietario (`User`, `Order` o `Delivery`).
+
+La carpeta del repositorio queda saneada mediante `.gitkeep`; los archivos reales se generan únicamente en runtime.
+
+## Docker
+
+### Opción recomendada: Docker Compose
+
+Construir y levantar API + MongoDB:
+
+```bash
+docker compose up --build
+```
+
+MongoDB utiliza un volumen persistente. La API depende del `healthcheck` de Mongo y no arranca hasta que la base responde correctamente.
+
+Accesos:
+
+- API: `http://localhost:8080`
+- Swagger: `http://localhost:8080/api/docs`
+- Health: `http://localhost:8080/health`
+
+Detener:
+
+```bash
+docker compose down
+```
+
+Detener eliminando también los volúmenes:
+
+```bash
+docker compose down -v
+```
+
+### Imagen individual
+
+```bash
 docker build -t shipnow-api:1.0 .
+docker run --rm -p 8080:8080 --env-file .env shipnow-api:1.0
+```
 
-### 2. Ejecutar el contenedor:
-docker run -d -p 8080:8080 --env-file .env --name shipnow-container shipnow-api:1.0
+El `Dockerfile` utiliza un enfoque **multi-stage**, instala únicamente dependencias de producción en la imagen final y ejecuta el proceso con el usuario no root `node`.
 
-### 3. Verificación y Accesos:
-- **Health Check:** http://localhost:8080/health
-- **Swagger UI:** http://localhost:8080/api/docs
-- **Puerto expuesto:** 8080
+## Seguridad y performance
 
----
-
-## 🚫 Archivos Ignorados (.gitignore & .dockerignore)
-
-Archivos y carpetas excluidos por seguridad y optimización:
-- Variables de entorno (.env, .env.testing)
-- Dependencias locales (node_modules/)
-- Registros de log (logs/)
-- Archivos subidos por usuarios (uploads/documents/)
-- Cobertura de tests y configuración del IDE (coverage/, .vscode/)
+- `express.json` limitado a 1 MB.
+- Paginación en listados con máximo configurable.
+- Multer limitado a 5 MB y un archivo por request.
+- `x-powered-by` deshabilitado.
+- Endpoints internos (mocks/logger) controlados por ambiente.
+- `.env`, logs, uploads, coverage y temporales excluidos de Git.
+- No existen credenciales Mongo hardcodeadas en el código.
+- Health check disponible para monitoreo y Docker.

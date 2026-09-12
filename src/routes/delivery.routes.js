@@ -1,19 +1,55 @@
-import { Router } from 'express';
+import {
+  Router
+} from 'express';
 
-const router = Router();
+import {
+  DeliveryController
+} from '../controllers/delivery.controller.js';
 
-/**
- * @openapi
- * /api/deliveries:
- *   get:
- *     summary: Obtener listado de entregas
- *     tags: [Deliveries]
- *     responses:
- *       200:
- *         description: Lista de entregas.
- */
-router.get('/', (req, res) => {
-  res.json({ status: 'success', payload: [] });
-});
+const router =
+  Router();
+
+const controller =
+  new DeliveryController();
+
+router.get(
+  '/',
+  (req, res, next) =>
+    controller.getDeliveries(
+      req,
+      res,
+      next
+    )
+);
+
+router.post(
+  '/',
+  (req, res, next) =>
+    controller.createDelivery(
+      req,
+      res,
+      next
+    )
+);
+
+router.get(
+  '/:id',
+  (req, res, next) =>
+    controller.getDeliveryById(
+      req,
+      res,
+      next
+    )
+);
+
+router.put(
+  '/:id',
+  (req, res, next) =>
+    controller.updateDelivery(
+      req,
+      res,
+      next
+    )
+);
 
 export default router;

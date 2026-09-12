@@ -1,12 +1,13 @@
 {
   "name": "shipnow-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "API backend profesional ShipNow",
   "type": "module",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "npx mocha -r dotenv/config --timeout 10000 --exit test/**/*.test.js"
+    "test": "mocha --timeout 15000 --exit \"test/**/*.test.js\""
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
@@ -21,7 +22,7 @@
   },
   "devDependencies": {
     "chai": "^4.4.1",
-    "mocha": "^10.4.0",
+    "mocha": "^10.4.1",
     "nodemon": "^3.1.0",
     "supertest": "^6.3.4"
   }

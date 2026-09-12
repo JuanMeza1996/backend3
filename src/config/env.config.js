@@ -1,19 +1,40 @@
 import 'dotenv/config';
 
-const REQUIRED_ENV_VARS = ['PORT', 'MONGO_URI', 'NODE_ENV'];
+const positiveInteger = (value, fallback) => {
+  const parsed = Number(value);
 
-for (const envVar of REQUIRED_ENV_VARS) {
-  if (!process.env[envVar]) {
-    console.error(`[FATAL ERROR] La variable de entorno crítica '${envVar}' no está definida. La aplicación no puede iniciar.`);
-    process.exit(1);
-  }
-}
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : fallback;
+};
 
 export const config = {
-  port: process.env.PORT || 8080,
-  mongoUri: process.env.MONGO_URI,
-  mongoUriTest: process.env.MONGO_URI_TEST || process.env.MONGO_URI,
+  port: positiveInteger(process.env.PORT, 8080),
+
   nodeEnv: process.env.NODE_ENV || 'development',
+
+  mongoUri:
+    process.env.MONGO_URI ||
+    'mongodb://localhost:27017/shipnow',
+
+  mongoUriTest:
+    process.env.MONGO_URI_TEST ||
+    'mongodb://localhost:27017/shipnow_test',
+
   logLevel: process.env.LOG_LEVEL || 'info',
-  jwtSecret: process.env.JWT_SECRET || 'default_secret_key'
+
+  maxFileSizeMb:
+    positiveInteger(process.env.MAX_FILE_SIZE_MB, 5),
+
+  uploadDir:
+    process.env.UPLOAD_DIR || 'uploads/documents'
 };
+
+export const isProduction =
+  config.nodeEnv === 'production';
+
+export const isTest =
+  config.nodeEnv === 'test';
+
+export const isDevelopment =
+  config.nodeEnv === 'development';

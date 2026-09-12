@@ -21,3 +21,17 @@ export const DELIVERY_STATUS = {
   IN_PROGRESS: 'en_curso',
   COMPLETED: 'completado'
 };
+
+export const ORDER_PRIORITY = {
+  LOW: 'baja',
+  MEDIUM: 'media',
+  HIGH: 'alta'
+};
+
+export const ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'application/pdf'
+];
+
+export const MAX_MOCK_QUANTITY = 100;
